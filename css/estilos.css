@@ -1,10 +1,22 @@
 :root {
-  --fondo: #1a1a1a;
-  --fondo-item: #242424;
-  --borde: #333;
-  --texto: #e8e8e8;
-  --texto-suave: #9a9a9a;
-  --acento: #d94f4f;
+  /* Superficies */
+  --fondo: #f4ecd8;
+  --fondo-item: #faf3e0;
+  --borde: #d9c9a8;
+
+  /* Texto */
+  --texto: #3a2e1f;
+  --texto-suave: #8a7554;
+
+  /* Acento */
+  --acento: #b0483a;
+
+  /* Alertas */
+  --aviso-borde: #c9a558;
+  --aviso-fondo: #f4e0b8;
+  --aviso-texto: #6b4a1a;
+
+  /* Layout */
   --radio: 8px;
   --espacio: 16px;
 }
@@ -288,7 +300,7 @@ html, body {
 
 .campo input,
 .campo textarea {
-  background: var(--fondo);
+  background: #fffdf7;
   border: 1px solid var(--borde);
   border-radius: 6px;
   color: var(--texto);
@@ -344,12 +356,22 @@ html, body {
   transition: border-left-color 0.2s ease;
 }
 
-.vineta[data-color="rojo"]     { border-left-color: #e89a9a; }
-.vineta[data-color="azul"]     { border-left-color: #9ab8e8; }
-.vineta[data-color="amarillo"] { border-left-color: #e8d99a; }
-.vineta[data-color="verde"]    { border-left-color: #9ad9a8; }
-.vineta[data-color="naranja"]  { border-left-color: #e8bb9a; }
-.vineta[data-color="violeta"]  { border-left-color: #c4a8e8; }
+/* Colores de borde de viñeta */
+.vineta[data-color="rojo"]     { border-left-color: #d98a80; }
+.vineta[data-color="azul"]     { border-left-color: #8aa8d4; }
+.vineta[data-color="amarillo"] { border-left-color: #d9c878; }
+.vineta[data-color="verde"]    { border-left-color: #8aba8e; }
+.vineta[data-color="naranja"]  { border-left-color: #d9a878; }
+.vineta[data-color="violeta"]  { border-left-color: #b89ad4; }
+
+/* Puntos del selector de color */
+.punto-color[data-color=""]        { background: var(--borde); }
+.punto-color[data-color="rojo"]     { background: #d98a80; }
+.punto-color[data-color="azul"]     { background: #8aa8d4; }
+.punto-color[data-color="amarillo"] { background: #d9c878; }
+.punto-color[data-color="verde"]    { background: #8aba8e; }
+.punto-color[data-color="naranja"]  { background: #d9a878; }
+.punto-color[data-color="violeta"]  { background: #b89ad4; }
 
 /* Selector de color */
 .selector-color {
@@ -389,13 +411,13 @@ html, body {
 /* ============================================ */
 
 .vineta.con-aviso {
-  border-left-color: #d99a3a !important;
+  border-left-color: var(--aviso-borde) !important;
 }
 
 .vineta-aviso-icono {
   background: transparent;
   border: none;
-  color: #d99a3a;
+  color: var(--aviso-borde);
   font-size: 0.9rem;
   cursor: pointer;
   padding: 0 4px;
@@ -404,12 +426,12 @@ html, body {
 }
 
 .vineta-aviso-panel {
-  background: #2a2218;
-  border: 1px solid #4a3a1a;
+  background: var(--aviso-fondo);
+  border: 1px solid var(--aviso-borde);
   border-radius: 6px;
   padding: 8px 10px;
   font-size: 0.8rem;
-  color: #e8c88a;
+  color: var(--aviso-texto);
   line-height: 1.4;
   margin-top: 6px;
 }
@@ -446,7 +468,7 @@ html, body {
   background: var(--fondo-item);
   border: 1px solid var(--borde);
   border-radius: var(--radio);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 6px 20px rgba(90, 60, 20, 0.15);
   z-index: 50;
   min-width: 200px;
   overflow: hidden;
@@ -679,7 +701,7 @@ body.con-barra-seleccion .contenedor {
   justify-content: space-between;
   gap: 12px;
   z-index: 60;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 6px 20px rgba(90, 60, 20, 0.15);
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
 }
 
