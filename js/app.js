@@ -40,6 +40,10 @@ const btnAccion = document.getElementById("btn-accion");
 const btnMenu = document.getElementById("btn-menu");
 const menu = document.getElementById("menu-desplegable");
 let menuFondo = null; // se crea dinámicamente
+const btnActualizar = document.getElementById("btn-actualizar");
+if (btnActualizar) {
+  btnActualizar.addEventListener("click", aplicarVersionNueva);
+}
 
 // --------------------------------------------
 // Navegación
@@ -218,7 +222,62 @@ function crearOpcion(texto, accion, deshabilitado = false) {
 }
 
 // --------------------------------------------
+// Service Worker (PWA)
+// --------------------------------------------
+
+let swRegistro = null;
+
+async function registrarServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+
+  try {
+    swRegistro = await navigator.serviceWorker.register("./service-worker.js");
+
+    // Detectar si hay una versión nueva esperando
+    swRegistro.addEventListener("updatefound", () => {
+      const nuevoSW = swRegistro.installing;
+      if (!nuevoSW) return;
+
+      nuevoSW.addEventListener("statechange", () => {
+        if (nuevoSW.state === "installed" && navigator.serviceWorker.controller) {
+          mostrarAvisoVersionNueva();
+        }
+      });
+    });
+
+    // Comprobar actualizaciones al volver a la app
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        swRegistro.update();
+      }
+    });
+  } catch (e) {
+    console.warn("No se pudo registrar el Service Worker:", e);
+  }
+}
+
+function mostrarAvisoVersionNueva() {
+  const aviso = document.getElementById("aviso-version");
+  if (!aviso) return;
+  aviso.hidden = false;
+}
+
+async function aplicarVersionNueva() {
+  if (!swRegistro || !swRegistro.waiting) {
+    window.location.reload();
+    return;
+  }
+  swRegistro.waiting.postMessage({ tipo: "SKIP_WAITING" });
+  // Recargar cuando el nuevo SW tome el control
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    window.location.reload();
+  });
+}
+
+
+// --------------------------------------------
 // Estado inicial
 // --------------------------------------------
 
+registrarServiceWorker();
 mostrarVista("proyectos", false);
