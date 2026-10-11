@@ -10,6 +10,12 @@ import {
   getProyectoActivo
 } from "./proyectos.js";
 
+import {
+  exportarProyecto,
+  exportarBiblioteca,
+  abrirImportacion
+} from "./portabilidad.js";
+
 // --------------------------------------------
 // Títulos de las vistas
 // --------------------------------------------
@@ -31,11 +37,16 @@ const tituloVista = document.getElementById("titulo-vista");
 const btnVolver = document.getElementById("btn-volver");
 const btnAccion = document.getElementById("btn-accion");
 
+const btnMenu = document.getElementById("btn-menu");
+const menu = document.getElementById("menu-desplegable");
+let menuFondo = null; // se crea dinámicamente
+
 // --------------------------------------------
 // Navegación
 // --------------------------------------------
 
 export function mostrarVista(nombre, apilar = true) {
+    cerrarMenu();
   document.querySelectorAll(".vista").forEach(v => v.classList.remove("activa"));
 
   const vista = document.getElementById("vista-" + nombre);
@@ -110,6 +121,75 @@ document.addEventListener("navegar", (e) => {
   const destino = e.detail.vista;
   if (destino) mostrarVista(destino);
 });
+btnMenu.addEventListener("click", (e) => {
+  e.stopPropagation();
+  if (menu.hidden) {
+    abrirMenu();
+  } else {
+    cerrarMenu();
+  }
+});
+
+// Recargar proyectos cuando se importe algo
+document.addEventListener("proyectos-cambiados", async () => {
+  const vistaActual = historial[historial.length - 1];
+  if (vistaActual === "proyectos") {
+    await renderProyectos();
+  }
+});
+
+// --------------------------------------------
+// Menú desplegable
+// --------------------------------------------
+
+function abrirMenu() {
+  const vistaActual = historial[historial.length - 1];
+  menu.innerHTML = "";
+
+  // Crear capa de fondo para cerrar al pulsar fuera
+  if (!menuFondo) {
+    menuFondo = document.createElement("div");
+    menuFondo.className = "menu-fondo";
+    menuFondo.addEventListener("click", cerrarMenu);
+    document.body.appendChild(menuFondo);
+  }
+  menuFondo.hidden = false;
+
+  // Opciones según la vista
+  if (vistaActual === "proyectos") {
+    menu.appendChild(crearOpcion("Importar archivo", abrirImportacion));
+    menu.appendChild(crearOpcion("Exportar biblioteca", exportarBiblioteca));
+  } else if (vistaActual === "paginas") {
+    const proyecto = getProyectoActivo();
+    if (proyecto) {
+      menu.appendChild(crearOpcion("Exportar proyecto", () => exportarProyecto(proyecto.id)));
+    } else {
+      menu.appendChild(crearOpcion("Exportar proyecto", null, true));
+    }
+  } else {
+    menu.appendChild(crearOpcion("Sin acciones disponibles", null, true));
+  }
+
+  menu.hidden = false;
+}
+
+function cerrarMenu() {
+  menu.hidden = true;
+  if (menuFondo) menuFondo.hidden = true;
+}
+
+function crearOpcion(texto, accion, deshabilitado = false) {
+  const btn = document.createElement("button");
+  btn.className = "menu-opcion" + (deshabilitado ? " deshabilitado" : "");
+  btn.textContent = texto;
+  if (!deshabilitado && accion) {
+    btn.addEventListener("click", async () => {
+      cerrarMenu();
+      await accion();
+    });
+  }
+  return btn;
+}
 
 // --------------------------------------------
 // Estado inicial
