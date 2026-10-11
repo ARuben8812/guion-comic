@@ -502,3 +502,161 @@ html, body {
 .menu-fondo[hidden] {
   display: none;
 }
+
+/* ============================================ */
+/* Modo selección y barra inferior              */
+/* ============================================ */
+
+.item.seleccionable {
+  padding-left: 44px;
+  position: relative;
+}
+
+.item-check {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--borde);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: transparent;
+  transition: all 0.15s ease;
+}
+
+.item.seleccionado {
+  border-color: var(--acento);
+}
+
+.item.seleccionado .item-check {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: #fff;
+}
+
+/* Barra inferior */
+.barra-seleccion {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--fondo-item);
+  border-top: 1px solid var(--borde);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  z-index: 30;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
+
+.barra-seleccion[hidden] {
+  display: none;
+}
+
+.barra-info {
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+}
+
+.barra-botones {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-primario {
+  padding: 10px 16px;
+  background: var(--acento);
+  border: 1px solid var(--acento);
+  border-radius: var(--radio);
+  color: #fff;
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.btn-primario:hover {
+  opacity: 0.9;
+}
+
+.btn-primario:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Cuando hay barra, dejar espacio abajo del contenido */
+body.con-barra-seleccion .contenedor {
+  padding-bottom: 100px;
+}
+/* ============================================ */
+/* Impresión (PDF vía navegador)                */
+/* ============================================ */
+
+#contenedor-impresion {
+  display: none;
+}
+
+@media print {
+  body.modo-impresion > *:not(#contenedor-impresion) {
+    display: none !important;
+  }
+
+  body.modo-impresion #contenedor-impresion {
+    display: block !important;
+    color: #000;
+    background: #fff;
+    font-family: Georgia, "Times New Roman", serif;
+    padding: 20mm 18mm;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  #contenedor-impresion h1 {
+    font-size: 20pt;
+    margin-bottom: 12pt;
+    border-bottom: 2px solid #000;
+    padding-bottom: 6pt;
+  }
+
+  #contenedor-impresion h2 {
+    font-size: 15pt;
+    margin-top: 16pt;
+    margin-bottom: 10pt;
+  }
+
+  #contenedor-impresion h3 {
+    font-size: 12pt;
+    margin-top: 10pt;
+    margin-bottom: 6pt;
+    font-weight: bold;
+  }
+
+  #contenedor-impresion ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0 0 10pt 0;
+  }
+
+  #contenedor-impresion li {
+    margin: 2pt 0;
+  }
+
+  #contenedor-impresion .bloque-vineta {
+    margin-bottom: 10pt;
+  }
+
+  #contenedor-impresion .salto-pagina {
+    page-break-before: always;
+  }
+
+  @page {
+    margin: 0;
+  }
+}

@@ -138,6 +138,31 @@ document.addEventListener("proyectos-cambiados", async () => {
   }
 });
 
+import {
+  activarModoSeleccion,
+  desactivarModoSeleccion,
+  estaEnModoSeleccion,
+  getPaginasSeleccionadas
+} from "./proyectos.js";
+
+document.getElementById("btn-cancelar-seleccion").addEventListener("click", () => {
+  desactivarModoSeleccion();
+});
+
+document.getElementById("btn-exportar-md").addEventListener("click", async () => {
+  const ids = getPaginasSeleccionadas();
+  if (ids.length === 0) return;
+  const { exportarMarkdown } = await import("./exportar.js");
+  await exportarMarkdown(ids);
+});
+
+document.getElementById("btn-exportar-pdf").addEventListener("click", async () => {
+  const ids = getPaginasSeleccionadas();
+  if (ids.length === 0) return;
+  const { exportarPDF } = await import("./exportar.js");
+  await exportarPDF(ids);
+});
+
 // --------------------------------------------
 // Menú desplegable
 // --------------------------------------------
@@ -160,8 +185,9 @@ function abrirMenu() {
     menu.appendChild(crearOpcion("Importar archivo", abrirImportacion));
     menu.appendChild(crearOpcion("Exportar biblioteca", exportarBiblioteca));
   } else if (vistaActual === "paginas") {
-    const proyecto = getProyectoActivo();
+    const proyecto = getProyectoActivo();    
     if (proyecto) {
+      menu.appendChild(crearOpcion("Seleccionar para exportar", activarModoSeleccion));
       menu.appendChild(crearOpcion("Exportar proyecto", () => exportarProyecto(proyecto.id)));
     } else {
       menu.appendChild(crearOpcion("Exportar proyecto", null, true));

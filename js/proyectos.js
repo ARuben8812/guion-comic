@@ -28,6 +28,42 @@ export function setProyectoActivo(proyecto) {
   proyectoActivo = proyecto;
 }
 
+// Estado del modo selección
+let modoSeleccion = false;
+const seleccionadas = new Set();
+
+export function estaEnModoSeleccion() {
+  return modoSeleccion;
+}
+
+export function getPaginasSeleccionadas() {
+  return Array.from(seleccionadas);
+}
+
+export function activarModoSeleccion() {
+  modoSeleccion = true;
+  seleccionadas.clear();
+  renderPaginas();
+}
+
+export function desactivarModoSeleccion() {
+  modoSeleccion = false;
+  seleccionadas.clear();
+  document.body.classList.remove("con-barra-seleccion");
+  actualizarBarraSeleccion();
+  renderPaginas();
+}
+
+export function toggleSeleccionPagina(id) {
+  if (seleccionadas.has(id)) {
+    seleccionadas.delete(id);
+  } else {
+    seleccionadas.add(id);
+  }
+  actualizarBarraSeleccion();
+  renderPaginas();
+}
+
 // --------------------------------------------
 // Render: vista Proyectos
 // --------------------------------------------
@@ -87,7 +123,6 @@ export async function renderPaginas() {
     return;
   }
 
-  // Recargar desde la base por si cambió
   proyectoActivo = await obtenerProyecto(proyectoActivo.id);
   if (!proyectoActivo) {
     contenedor.innerHTML = `<p class="placeholder">Proyecto no encontrado.</p>`;
@@ -112,22 +147,50 @@ export async function renderPaginas() {
     const numV = pagina.numVinietas;
     const texto = numV === 1 ? "1 viñeta" : `${numV} viñetas`;
 
-    item.innerHTML = `
-      <span class="item-titulo">${escapar(pagina.titulo)}</span>
-      <span class="item-sub">${texto}</span>
-    `;
+    if (modoSeleccion) {
+      item.classList.add("seleccionable");
+      if (seleccionadas.has(pagina.id)) {
+        item.classList.add("seleccionado");
+      }
+      const check = document.createElement("span");
+      check.className = "item-check";
+      check.textContent = "✓";
+      item.appendChild(check);
+    }
 
-    item.addEventListener("click", () => abrirPagina(pagina.id));
-    item.addEventListener("contextmenu", (e) => {
-      e.preventDefault();
-      menuContextualPagina(pagina);
+    const titulo = document.createElement("span");
+    titulo.className = "item-titulo";
+    titulo.textContent = pagina.titulo;
+
+    const sub = document.createElement("span");
+    sub.className = "item-sub";
+    sub.textContent = texto;
+
+    item.appendChild(titulo);
+    item.appendChild(sub);
+
+    item.addEventListener("click", () => {
+      if (modoSeleccion) {
+        toggleSeleccionPagina(pagina.id);
+      } else {
+        abrirPagina(pagina.id);
+      }
     });
+
+    if (!modoSeleccion) {
+      item.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        menuContextualPagina(pagina);
+      });
+    }
 
     lista.appendChild(item);
   });
 
   contenedor.innerHTML = "";
   contenedor.appendChild(lista);
+
+  actualizarBarraSeleccion();
 }
 
 // --------------------------------------------
@@ -196,6 +259,31 @@ function menuContextualPagina(pagina) {
   if (!confirmar) return;
 
   eliminarPagina(proyectoActivo.id, pagina.id).then(() => renderPaginas());
+}
+
+function actualizarBarraSeleccion() {
+  const barra = document.getElementById("barra-seleccion");
+  const info = document.getElementById("barra-info");
+  const btnMd = document.getElementById("btn-exportar-md");
+  const btnPdf = document.getElementById("btn-exportar-pdf");
+
+  if (!barra) return;
+
+  if (!modoSeleccion) {
+    barra.hidden = true;
+    document.body.classList.remove("con-barra-seleccion");
+    return;
+  }
+
+  barra.hidden = false;
+  document.body.classList.add("con-barra-seleccion");
+
+  const n = seleccionadas.size;
+  info.textContent = n === 1 ? "1 seleccionada" : `${n} seleccionadas`;
+
+  const habilitado = n > 0;
+  btnMd.disabled = !habilitado;
+  btnPdf.disabled = !habilitado;
 }
 
 // --------------------------------------------
