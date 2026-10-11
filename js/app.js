@@ -66,13 +66,18 @@ function volver() {
 async function refrescarVista(nombre) {
   if (nombre === "proyectos") {
     await renderProyectos();
+    btnAccion.hidden = false;
   } else if (nombre === "paginas") {
     await renderPaginas();
-    // Ajustar el título con el nombre del proyecto
     const proyecto = getProyectoActivo();
     if (proyecto) {
       tituloVista.textContent = proyecto.titulo;
     }
+    btnAccion.hidden = false;
+  } else if (nombre === "editor") {
+    btnAccion.hidden = true;
+  } else if (nombre === "exportar") {
+    btnAccion.hidden = true;
   }
 }
 

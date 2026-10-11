@@ -1,0 +1,367 @@
+// ============================================
+// Guion Comic — Editor de página
+// ============================================
+
+import {
+  guardarPagina,
+  obtenerProyecto
+} from "./almacen.js";
+
+// --------------------------------------------
+// Estado
+// --------------------------------------------
+
+let paginaActiva = null;
+let proyectoActivoId = null;
+let temporizadorGuardado = null;
+
+const indicador = () => document.getElementById("indicador-guardado");
+const contenedor = () => document.getElementById("editor-contenido");
+
+// --------------------------------------------
+// Definición de campos y tooltips
+// --------------------------------------------
+
+const CAMPOS = [
+  {
+    clave: "plano",
+    etiqueta: "Plano / encuadre",
+    tooltip: "Cómo se ve la escena: general (todo el lugar), medio (de cintura arriba), primer plano (solo la cara), detalle (un objeto).",
+    tipo: "input",
+    placeholder: "Ej: plano medio"
+  },
+  {
+    clave: "escenario",
+    etiqueta: "Escenario",
+    tooltip: "Dónde ocurre la viñeta: lugar, momento del día, ambiente. Ayuda a imaginar el fondo.",
+    tipo: "input",
+    placeholder: "Ej: azotea al atardecer"
+  },
+  {
+    clave: "accion",
+    etiqueta: "Acción",
+    tooltip: "Qué está pasando en la viñeta. Describe lo que hacen los personajes o lo que cambia respecto a la viñeta anterior.",
+    tipo: "textarea",
+    placeholder: "Ej: A salta desde la azotea hacia el edificio de al lado"
+  },
+  {
+    clave: "personajes",
+    etiqueta: "Personajes",
+    tooltip: "Quiénes aparecen en la viñeta. Sepáralos por comas si hay varios.",
+    tipo: "input",
+    placeholder: "Ej: A, B"
+  },
+  {
+    clave: "dialogo",
+    etiqueta: "Diálogo",
+    tooltip: "Lo que dicen los personajes o los textos que aparecen (cartelas, sonidos). Si no hay, déjalo vacío.",
+    tipo: "textarea",
+    placeholder: "Ej: A: \"¡No me esperes!\""
+  },
+  {
+    clave: "notas",
+    etiqueta: "Notas",
+    tooltip: "Cualquier idea suelta para ti: referencias visuales, dudas, cosas a revisar. Es opcional.",
+    tipo: "textarea",
+    placeholder: "Opcional"
+  }
+];
+
+// --------------------------------------------
+// Abrir página en el editor
+// --------------------------------------------
+
+export async function abrirEditor(proyectoId, paginaId) {
+  const proyecto = await obtenerProyecto(proyectoId);
+  if (!proyecto) {
+    alert("Proyecto no encontrado.");
+    return;
+  }
+
+  const pagina = proyecto.paginas.find(p => p.id === paginaId);
+  if (!pagina) {
+    alert("Página no encontrada.");
+    return;
+  }
+
+  proyectoActivoId = proyectoId;
+  paginaActiva = JSON.parse(JSON.stringify(pagina)); // copia para editar
+
+  renderEditor();
+}
+
+// --------------------------------------------
+// Render del editor completo
+// --------------------------------------------
+
+function renderEditor() {
+  const c = contenedor();
+  c.innerHTML = "";
+
+  // Cabecera: título editable + metadatos
+  const cabecera = document.createElement("div");
+  cabecera.className = "editor-cabecera";
+
+  const titulo = document.createElement("input");
+  titulo.type = "text";
+  titulo.className = "editor-titulo";
+  titulo.value = paginaActiva.titulo;
+  titulo.addEventListener("input", () => {
+    paginaActiva.titulo = titulo.value;
+    programarGuardado();
+  });
+
+  const meta = document.createElement("div");
+  meta.className = "editor-meta";
+  meta.textContent = textoVinietas(paginaActiva.numVinietas);
+
+  cabecera.appendChild(titulo);
+  cabecera.appendChild(meta);
+  c.appendChild(cabecera);
+
+  // Lista de viñetas
+  const lista = document.createElement("div");
+  lista.className = "vinietas";
+
+  paginaActiva.viñetas.forEach((vineta, indice) => {
+    lista.appendChild(renderVineta(vineta, indice));
+  });
+
+  c.appendChild(lista);
+
+  // Pie: añadir viñeta / quitar última
+  const pie = document.createElement("div");
+  pie.className = "editor-pie";
+
+  const btnAnadir = document.createElement("button");
+  btnAnadir.className = "btn-secundario";
+  btnAnadir.textContent = "+ Añadir viñeta";
+  btnAnadir.addEventListener("click", anadirVineta);
+
+//   const btnQuitar = document.createElement("button");
+//   btnQuitar.className = "btn-secundario";
+//   btnQuitar.textContent = "− Quitar última";
+//   btnQuitar.disabled = paginaActiva.viñetas.length <= 1;
+//   btnQuitar.addEventListener("click", quitarUltimaVineta);
+
+//   pie.appendChild(btnAnadir);
+//   pie.appendChild(btnQuitar);
+//   c.appendChild(pie);
+
+ pie.appendChild(btnAnadir);
+  c.appendChild(pie);
+}
+
+// --------------------------------------------
+// Render de una viñeta
+// --------------------------------------------
+
+function renderVineta(vineta, indice) {
+  const tarjeta = document.createElement("div");
+  tarjeta.className = "vineta";
+
+  // Cabecera de la viñeta
+  const cab = document.createElement("div");
+  cab.className = "vineta-cabecera";
+
+  const etiqueta = document.createElement("span");
+  etiqueta.textContent = `Viñeta ${indice + 1}`;
+
+  const acciones = document.createElement("div");
+  acciones.className = "vineta-acciones";
+
+  const btnSubir = document.createElement("button");
+  btnSubir.className = "btn-mini";
+  btnSubir.textContent = "↑";
+  btnSubir.disabled = indice === 0;
+  btnSubir.title = "Mover arriba";
+  btnSubir.addEventListener("click", () => moverVineta(indice, -1));
+
+  const btnBajar = document.createElement("button");
+  btnBajar.className = "btn-mini";
+  btnBajar.textContent = "↓";
+  btnBajar.disabled = indice === paginaActiva.viñetas.length - 1;
+  btnBajar.title = "Mover abajo";
+  btnBajar.addEventListener("click", () => moverVineta(indice, 1));
+
+  const btnEliminar = document.createElement("button");
+  btnEliminar.className = "btn-mini";
+  btnEliminar.textContent = "×";
+  btnEliminar.title = "Eliminar viñeta";
+  btnEliminar.addEventListener("click", () => eliminarVineta(indice));
+
+  acciones.appendChild(btnSubir);
+  acciones.appendChild(btnBajar);
+  acciones.appendChild(btnEliminar);
+
+  cab.appendChild(etiqueta);
+  cab.appendChild(acciones);
+  tarjeta.appendChild(cab);
+
+  // Campos
+  CAMPOS.forEach(campo => {
+    tarjeta.appendChild(renderCampo(vineta, campo));
+  });
+
+  return tarjeta;
+}
+
+// --------------------------------------------
+// Render de un campo individual
+// --------------------------------------------
+
+function renderCampo(vineta, campo) {
+  const div = document.createElement("div");
+  div.className = "campo";
+
+  const etiqueta = document.createElement("label");
+  etiqueta.className = "campo-etiqueta";
+
+  const texto = document.createElement("span");
+  texto.textContent = campo.etiqueta;
+
+  const tooltip = document.createElement("span");
+  tooltip.className = "campo-tooltip";
+  tooltip.textContent = "?";
+  tooltip.setAttribute("data-tooltip", campo.tooltip);
+  tooltip.setAttribute("tabindex", "0");
+
+  etiqueta.appendChild(texto);
+  etiqueta.appendChild(tooltip);
+
+  let input;
+  if (campo.tipo === "textarea") {
+    input = document.createElement("textarea");
+    input.rows = 2;
+  } else {
+    input = document.createElement("input");
+    input.type = "text";
+  }
+  input.placeholder = campo.placeholder || "";
+  input.value = vineta[campo.clave] || "";
+
+  input.addEventListener("input", () => {
+    vineta[campo.clave] = input.value;
+    programarGuardado();
+  });
+
+  div.appendChild(etiqueta);
+  div.appendChild(input);
+  return div;
+}
+
+// --------------------------------------------
+// Acciones sobre viñetas
+// --------------------------------------------
+
+function anadirVineta() {
+  const nueva = {
+    id: generarId(),
+    numero: paginaActiva.viñetas.length + 1,
+    plano: "",
+    escenario: "",
+    accion: "",
+    personajes: "",
+    dialogo: "",
+    notas: ""
+  };
+  paginaActiva.viñetas.push(nueva);
+  paginaActiva.numVinietas = paginaActiva.viñetas.length;
+  renumerarVinietas();
+  renderEditor();
+  programarGuardado(true);
+}
+
+// function quitarUltimaVineta() {
+//   if (paginaActiva.viñetas.length <= 1) return;
+//   paginaActiva.viñetas.pop();
+//   paginaActiva.numVinietas = paginaActiva.viñetas.length;
+//   renumerarVinietas();
+//   renderEditor();
+//   programarGuardado(true);
+// }
+
+function eliminarVineta(indice) {
+  if (paginaActiva.viñetas.length <= 1) {
+    alert("Una página debe tener al menos una viñeta.");
+    return;
+  }
+  if (!confirm(`¿Eliminar la viñeta ${indice + 1}?`)) return;
+
+  paginaActiva.viñetas.splice(indice, 1);
+  paginaActiva.numVinietas = paginaActiva.viñetas.length;
+  renumerarVinietas();
+  renderEditor();
+  programarGuardado(true);
+}
+
+function moverVineta(indice, delta) {
+  const nuevo = indice + delta;
+  if (nuevo < 0 || nuevo >= paginaActiva.viñetas.length) return;
+
+  const temp = paginaActiva.viñetas[indice];
+  paginaActiva.viñetas[indice] = paginaActiva.viñetas[nuevo];
+  paginaActiva.viñetas[nuevo] = temp;
+
+  renumerarVinietas();
+  renderEditor();
+  programarGuardado(true);
+}
+
+function renumerarVinietas() {
+  paginaActiva.viñetas.forEach((v, i) => {
+    v.numero = i + 1;
+  });
+}
+
+// --------------------------------------------
+// Guardado automático
+// --------------------------------------------
+
+function programarGuardado(inmediato = false) {
+  mostrarIndicador("Guardando…");
+
+  if (temporizadorGuardado) clearTimeout(temporizadorGuardado);
+
+  const espera = inmediato ? 0 : 800; // 800 ms tras dejar de escribir
+  temporizadorGuardado = setTimeout(ejecutarGuardado, espera);
+}
+
+async function ejecutarGuardado() {
+  if (!paginaActiva || !proyectoActivoId) return;
+
+  try {
+    await guardarPagina(proyectoActivoId, paginaActiva);
+    mostrarIndicador("Guardado", true);
+  } catch (e) {
+    console.error(e);
+    mostrarIndicador("Error al guardar");
+  }
+}
+
+function mostrarIndicador(texto, ocultarDespues = false) {
+  const ind = indicador();
+  ind.textContent = texto;
+  ind.hidden = false;
+  ind.classList.remove("oculto");
+  ind.classList.add("visible");
+
+  if (ocultarDespues) {
+    setTimeout(() => {
+      ind.classList.remove("visible");
+      ind.classList.add("oculto");
+    }, 1200);
+  }
+}
+
+// --------------------------------------------
+// Utilidades
+// --------------------------------------------
+
+function textoVinietas(n) {
+  return n === 1 ? "1 viñeta" : `${n} viñetas`;
+}
+
+function generarId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}

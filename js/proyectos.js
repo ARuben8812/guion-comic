@@ -11,6 +11,8 @@ import {
   eliminarPagina
 } from "./almacen.js";
 
+import { abrirEditor } from "./editor.js";
+
 // --------------------------------------------
 // Estado compartido
 // --------------------------------------------
@@ -171,8 +173,9 @@ async function abrirProyecto(id) {
 }
 
 async function abrirPagina(id) {
-  // La edición de página se implementará en la Fase 2.
-  alert("Editor de página: pendiente para la Fase 2.");
+  if (!proyectoActivo) return;
+  await abrirEditor(proyectoActivo.id, id);
+  document.dispatchEvent(new CustomEvent("navegar", { detail: { vista: "editor" } }));
 }
 
 // --------------------------------------------
