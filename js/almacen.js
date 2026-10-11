@@ -136,9 +136,10 @@ export async function crearPagina(proyectoId, titulo, numVinietas) {
 
   const viñetas = [];
   for (let i = 0; i < numVinietas; i++) {
-    viñetas.push({
+        viñetas.push({
       id: generarId(),
       numero: i + 1,
+      color: "",
       plano: "",
       escenario: "",
       accion: "",

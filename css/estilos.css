@@ -332,3 +332,94 @@ html, body {
 .btn-secundario:hover {
   background: var(--fondo-item);
 }
+
+/* ============================================ */
+/* Colores de viñeta (borde)                    */
+/* ============================================ */
+
+.vineta {
+  border-left-width: 6px;
+  border-left-style: solid;
+  border-left-color: var(--borde);
+  transition: border-left-color 0.2s ease;
+}
+
+.vineta[data-color="rojo"]     { border-left-color: #e89a9a; }
+.vineta[data-color="azul"]     { border-left-color: #9ab8e8; }
+.vineta[data-color="amarillo"] { border-left-color: #e8d99a; }
+.vineta[data-color="verde"]    { border-left-color: #9ad9a8; }
+.vineta[data-color="naranja"]  { border-left-color: #e8bb9a; }
+.vineta[data-color="violeta"]  { border-left-color: #c4a8e8; }
+
+/* Selector de color */
+.selector-color {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.punto-color {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.punto-color:hover {
+  transform: scale(1.15);
+}
+
+.punto-color.activo {
+  border-color: var(--texto);
+}
+
+.punto-color[data-color=""]        { background: var(--borde); }
+.punto-color[data-color="rojo"]     { background: #e89a9a; }
+.punto-color[data-color="azul"]     { background: #9ab8e8; }
+.punto-color[data-color="amarillo"] { background: #e8d99a; }
+.punto-color[data-color="verde"]    { background: #9ad9a8; }
+.punto-color[data-color="naranja"]  { background: #e8bb9a; }
+.punto-color[data-color="violeta"]  { background: #c4a8e8; }
+
+/* ============================================ */
+/* Alertas poka-yoke                            */
+/* ============================================ */
+
+.vineta.con-aviso {
+  border-left-color: #d99a3a !important;
+}
+
+.vineta-aviso-icono {
+  background: transparent;
+  border: none;
+  color: #d99a3a;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+}
+
+.vineta-aviso-panel {
+  background: #2a2218;
+  border: 1px solid #4a3a1a;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  color: #e8c88a;
+  line-height: 1.4;
+  margin-top: 6px;
+}
+
+.vineta-aviso-panel ul {
+  list-style: disc;
+  padding-left: 18px;
+  margin: 0;
+}
+
+.vineta-aviso-panel li {
+  margin: 2px 0;
+}
